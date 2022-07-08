@@ -2,18 +2,22 @@ package com.jungeunhong.jdbc.member.domain.repository;
 
 import com.jungeunhong.jdbc.connection.DBConnectionUtils;
 import com.jungeunhong.jdbc.member.domain.entity.Member;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.support.JdbcUtils;
 
+import javax.sql.DataSource;
 import java.sql.*;
-import java.util.Collection;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 /**
- * JDBC - DriverManager 사용
+ * JDBC - DataSource 사용
  */
 @Slf4j
-public class MemberRepositoryV0 {
+@RequiredArgsConstructor
+public class MemberRepositoryV1 {
+
+    private final DataSource dataSource;
 
     public Member save(Member member) throws SQLException {
 
@@ -23,7 +27,7 @@ public class MemberRepositoryV0 {
 
         try {
             // Connection 객체, Sql 객체 초기화
-            connection = DBConnectionUtils.getConnection();
+            connection = getConnection();
             preparedStatement = connection.prepareStatement(sql);
 
             // SQL 객체 파라미터 파인딩
@@ -58,7 +62,7 @@ public class MemberRepositoryV0 {
 
         try {
             // Connection 객체, Sql 객체 초기화
-            connection = DBConnectionUtils.getConnection();
+            connection = getConnection();
             preparedStatement = connection.prepareStatement(sql);
 
             // SQL 객체 파라미터 파인딩
@@ -100,7 +104,7 @@ public class MemberRepositoryV0 {
 
         try {
             // Connection 객체, Sql 객체 초기화
-            connection = DBConnectionUtils.getConnection();
+            connection = getConnection();
             preparedStatement = connection.prepareStatement(sql);
 
             // SQL 객체 파라미터 파인딩
@@ -132,7 +136,7 @@ public class MemberRepositoryV0 {
 
         try {
             // Connection 객체, Sql 객체 초기화
-            connection = DBConnectionUtils.getConnection();
+            connection = getConnection();
             preparedStatement = connection.prepareStatement(sql);
 
             // SQL 객체 파라미터 파인딩
@@ -157,31 +161,14 @@ public class MemberRepositoryV0 {
     }
 
     private void close(Connection con, Statement statement, ResultSet rs) {
-
-        if (rs != null) {
-            try {
-                rs.close();
-            } catch (SQLException e) {
-                log.error("error", e);
-            }
-        }
-
-        if (statement != null) {
-            try {
-                statement.close();
-            } catch (SQLException e) {
-                log.error("error", e);
-            }
-        }
-
-        if (con != null) {
-            try {
-                con.close();
-            } catch (SQLException e) {
-                log.error("error", e);
-            }
-        }
-
+        JdbcUtils.closeResultSet(rs);
+        JdbcUtils.closeStatement(statement);
+        JdbcUtils.closeConnection(con);
     }
 
+    private Connection getConnection() throws SQLException {
+        Connection connection = dataSource.getConnection();
+        log.info("get Connection={}, class={}",connection, connection.getClass());
+        return connection;
+    }
 }
